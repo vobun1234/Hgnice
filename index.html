@@ -3,122 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bubble Signal Game</title>
+  <title>Aviator Prediction</title>
   <style>
-    * {
+    body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-    body {
-      height: 100vh;
-      background: linear-gradient(135deg, #001f3f, #0074D9);
-      overflow: hidden;
+      background: linear-gradient(135deg, #0a0f1a, #001f3f);
+      color: #fff;
+      font-family: Arial, sans-serif;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      position: relative;
-      color: white;
+      height: 100vh;
+      text-align: center;
     }
-    #gameArea {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      z-index: 0;
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #00ffcc;
+      text-shadow: 0 0 5px #00ffcc;
     }
-    .bubble {
-      position: absolute;
-      bottom: -100px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0,200,255,0.8), rgba(0,100,200,0.6));
-      box-shadow: 0 0 10px rgba(0,200,255,0.8), 0 0 20px rgba(0,200,255,0.6);
-      animation: float 6s linear infinite;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    .bubble:hover {
-      transform: scale(1.2);
-    }
-    @keyframes float {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-120vh); opacity: 0; }
-    }
-    .signal {
-      position: absolute;
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      border: 5px solid #0f0;
-      animation: pulse 1s ease-out;
-      pointer-events: none;
-    }
-    @keyframes pulse {
-      0% { transform: scale(0.5); opacity: 1; }
-      100% { transform: scale(2.5); opacity: 0; }
-    }
-    #startBtn {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 14px 40px;
-      font-size: 20px;
+    #prediction {
+      font-size: 3rem;
       font-weight: bold;
-      background: linear-gradient(90deg, #00ff99, #00ccff);
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(0,255,200,0.7);
-      z-index: 2;
+      padding: 20px 40px;
+      border: 2px solid #00ffcc;
+      border-radius: 10px;
+      background: rgba(0, 255, 204, 0.1);
+      box-shadow: 0 0 10px #00ffcc;
+      margin-bottom: 20px;
       transition: 0.3s;
     }
-    #startBtn:hover {
-      background: linear-gradient(90deg, #00ccff, #00ff99);
-      transform: translate(-50%, -50%) scale(1.05);
+    #timer {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #ffcc00;
+      text-shadow: 0 0 5px #ffcc00;
+    }
+    button {
+      background: #00ffcc;
+      color: #0a0a0a;
+      font-size: 1.2rem;
+      padding: 10px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #ffcc00;
+      color: #000;
     }
   </style>
 </head>
 <body>
-  <button id="startBtn">Start</button>
-  <div id="gameArea"></div>
+  <h1>Aviator Game Prediction</h1>
+  <div id="prediction">Press Predict</div>
+  <div id="timer">Next update in: 60s</div>
+  <button onclick="showPrediction()">Predict</button>
 
   <script>
-    const gameArea = document.getElementById('gameArea');
-    const startBtn = document.getElementById('startBtn');
-    let bubbleInterval;
+    let timer = 60;
+    let countdown;
 
-    startBtn.addEventListener('click', () => {
-      startBtn.style.display = 'none';
-      bubbleInterval = setInterval(createBubble, 700);
-    });
-
-    function createBubble() {
-      const bubble = document.createElement('div');
-      bubble.classList.add('bubble');
-      bubble.style.left = Math.random() * (window.innerWidth - 60) + 'px';
-
-      bubble.addEventListener('click', (e) => {
-        createSignal(e.clientX, e.clientY);
-        bubble.remove();
-      });
-
-      gameArea.appendChild(bubble);
-      setTimeout(() => bubble.remove(), 6000);
+    function randomMultiplier() {
+      // 1.00x থেকে 10.00x এর মধ্যে র্যান্ডম মাল্টিপ্লায়ার
+      return (Math.random() * (10 - 1) + 1).toFixed(2) + "x";
     }
 
-    function createSignal(x, y) {
-      const signal = document.createElement('div');
-      signal.classList.add('signal');
-      signal.style.left = (x - 40) + 'px';
-      signal.style.top = (y - 40) + 'px';
-      gameArea.appendChild(signal);
-      setTimeout(() => signal.remove(), 1000);
+    function updateTimer() {
+      timer = 60;
+      document.getElementById("timer").innerText = "Next update in: " + timer + "s";
+      clearInterval(countdown);
+      countdown = setInterval(() => {
+        timer--;
+        document.getElementById("timer").innerText = "Next update in: " + timer + "s";
+        if (timer <= 0) {
+          document.getElementById("prediction").innerText = randomMultiplier();
+          timer = 60;
+        }
+      }, 1000);
+    }
+
+    function showPrediction() {
+      document.getElementById("prediction").innerText = randomMultiplier();
+      updateTimer();
     }
   </script>
 </body>
