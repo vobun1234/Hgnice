@@ -1,95 +1,288 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aviator Prediction</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HGNICE Aviator – Event Based Predictor</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
+    :root{
+      --bg:#0a0f1a;
+      --panel:#0f172a;
+      --accent:#00ffcc;
+      --accent2:#ffcc00;
+      --text:#e2e8f0;
+      --danger:#f87171;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; padding:24px;
       background: linear-gradient(135deg, #0a0f1a, #001f3f);
-      color: #fff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      text-align: center;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
+      min-height:100vh;
+      display:flex; flex-direction:column; align-items:center;
     }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-      color: #00ffcc;
-      text-shadow: 0 0 5px #00ffcc;
+    h1{
+      color: var(--accent);
+      margin: 0 0 16px;
+      text-align:center;
+      text-shadow: 0 0 6px rgba(0,255,204,.4);
     }
-    #prediction {
-      font-size: 3rem;
-      font-weight: bold;
-      padding: 20px 40px;
-      border: 2px solid #00ffcc;
-      border-radius: 10px;
-      background: rgba(0, 255, 204, 0.1);
-      box-shadow: 0 0 10px #00ffcc;
-      margin-bottom: 20px;
-      transition: 0.3s;
+    .wrap{
+      width:100%;
+      max-width:720px;
     }
-    #timer {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
-      color: #ffcc00;
-      text-shadow: 0 0 5px #ffcc00;
+    .game-area{
+      position:relative;
+      width:100%;
+      height:360px;
+      background: radial-gradient(circle at bottom, #001f3f, #0a0f1a 70%);
+      border:2px solid rgba(0,255,204,.2);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 0 20px rgba(0,255,204,.08);
     }
-    button {
-      background: #00ffcc;
-      color: #0a0a0a;
-      font-size: 1.2rem;
-      padding: 10px 30px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.3s;
+    .plane{
+      position:absolute;
+      width:64px; height:64px;
+      bottom:16px; left:16px;
+      transform-origin:center;
+      will-change: transform;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,.2));
     }
-    button:hover {
-      background: #ffcc00;
-      color: #000;
+    .prediction-box{
+      margin:16px 0;
+      background: var(--panel);
+      border-radius:12px;
+      padding:16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      text-align:center;
+    }
+    .prediction{
+      font-size:2.6rem;
+      font-weight:700;
+      color: var(--accent);
+      text-shadow: 0 0 10px rgba(0,255,204,.2);
+    }
+    .log{
+      margin-top:8px;
+      max-height:140px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:.9rem;
+      background:#0b1220;
+      border:1px solid #1e293b;
+      border-radius:8px;
+      padding:8px 10px;
+    }
+    .controls{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+      margin:12px 0 0;
+    }
+    button{
+      background: var(--accent);
+      color:#002018;
+      border:none;
+      border-radius:8px;
+      padding:10px 16px;
+      font-weight:600;
+      cursor:pointer;
+      transition:.15s;
+    }
+    button.secondary{
+      background:#1e293b; color:#e2e8f0;
+      border:1px solid #334155;
+    }
+    button.danger{
+      background: var(--danger); color:#fff;
+    }
+    button:disabled{
+      opacity:.6; cursor:not-allowed;
+    }
+    .tag{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      background:#1e293b;
+      color:#94a3b8;
+      font-size:.8rem;
+      margin-left:6px;
+    }
+    .stat-line{
+      margin-top:6px; font-size:.9rem; opacity:.8;
+    }
+    .hint{
+      font-size:.85rem; opacity:.6; text-align:center; margin-top:8px;
     }
   </style>
 </head>
 <body>
-  <h1>Aviator Game Prediction</h1>
-  <div id="prediction">Press Predict</div>
-  <div id="timer">Next update in: 60s</div>
-  <button onclick="showPrediction()">Predict</button>
+  <div class="wrap">
+    <h1>HGNICE Aviator – Event Based Predictor</h1>
+
+    <div class="prediction-box">
+      <div>সর্বশেষ প্রেডিকশন</div>
+      <div id="prediction" class="prediction">—</div>
+      <div class="stat-line" id="lastReason">ইভেন্ট ট্রিগার: —</div>
+    </div>
+
+    <div class="game-area" id="game">
+      <!-- plane dynamically spawn হবে -->
+    </div>
+
+    <div class="controls">
+      <button id="spawnBtn">Spawn Plane (ম্যানুয়াল)</button>
+      <button id="autoBtn" class="secondary">Auto Spawn: OFF</button>
+      <button id="clearLog" class="secondary">Clear Log</button>
+    </div>
+
+    <div class="hint">
+      “Auto Spawn” চালু না করলে টাইমার কাজ করবে না — <strong>শুধু প্লেন ফুটলেই</strong> প্রেডিকশন হবে।
+    </div>
+
+    <div class="log" id="log"></div>
+  </div>
 
   <script>
-    let timer = 60;
-    let countdown;
+    // --------------------
+    // CONFIG
+    // --------------------
+    const AUTO_MIN_MS = 2000;  // অটো মোডে র‍্যান্ডম মিন ইন্টারভাল
+    const AUTO_MAX_MS = 5000;  // অটো মোডে র‍্যান্ডম ম্যাক্স ইন্টারভাল
 
-    function randomMultiplier() {
-      // 1.00x থেকে 10.00x এর মধ্যে র্যান্ডম মাল্টিপ্লায়ার
-      return (Math.random() * (10 - 1) + 1).toFixed(2) + "x";
+    // --------------------
+    // STATE
+    // --------------------
+    const game = document.getElementById('game');
+    const logEl = document.getElementById('log');
+    const pEl = document.getElementById('prediction');
+    const reasonEl = document.getElementById('lastReason');
+    const spawnBtn = document.getElementById('spawnBtn');
+    const autoBtn = document.getElementById('autoBtn');
+    const clearLogBtn = document.getElementById('clearLog');
+
+    let auto = false;
+    let autoTimeout = null;
+    let lastId = 0;
+
+    // --------------------
+    // CORE: weighted multiplier generator
+    // --------------------
+    function randomMultiplierWeighted() {
+      const r = Math.random();
+      let mult;
+      if (r < 0.70) {
+        // 70%: 1x – 3x
+        mult = (Math.random() * (3 - 1) + 1);
+      } else if (r < 0.90) {
+        // 20%: 3x – 10x
+        mult = (Math.random() * (10 - 3) + 3);
+      } else if (r < 0.98) {
+        // 8%: 10x – 50x
+        mult = (Math.random() * (50 - 10) + 10);
+      } else {
+        // 2%: 50x – 100x
+        mult = (Math.random() * (100 - 50) + 50);
+      }
+      return mult.toFixed(2) + "x";
     }
 
-    function updateTimer() {
-      timer = 60;
-      document.getElementById("timer").innerText = "Next update in: " + timer + "s";
-      clearInterval(countdown);
-      countdown = setInterval(() => {
-        timer--;
-        document.getElementById("timer").innerText = "Next update in: " + timer + "s";
-        if (timer <= 0) {
-          document.getElementById("prediction").innerText = randomMultiplier();
-          timer = 60;
-        }
-      }, 1000);
+    // --------------------
+    // EVENT: "plane spawned" => make prediction
+    // --------------------
+    function onPlaneSpawned(id) {
+      const mult = randomMultiplierWeighted();
+      showPrediction(mult, `Plane#${id} spawned`);
+      log(`Plane#${id} -> ${mult}`);
     }
 
-    function showPrediction() {
-      document.getElementById("prediction").innerText = randomMultiplier();
-      updateTimer();
+    // --------------------
+    // PUBLIC API placeholder (যদি real API/Socket লাগে)
+    // --------------------
+    // সার্ভার থেকে multiplier এলে এই ফাংশন কল করবে
+    function triggerFromServer(multiplier){
+      showPrediction(multiplier, 'Server API');
+      log(`[SERVER] -> ${multiplier}`);
     }
+
+    // --------------------
+    // UI helpers
+    // --------------------
+    function showPrediction(mult, reason){
+      pEl.textContent = mult;
+      reasonEl.textContent = `ইভেন্ট ট্রিগার: ${reason}`;
+    }
+
+    function log(msg){
+      const ts = new Date().toLocaleTimeString();
+      logEl.innerHTML = `[${ts}] ${msg}<br>` + logEl.innerHTML;
+    }
+
+    // --------------------
+    // Plane spawn + animate + remove
+    // --------------------
+    function spawnPlane(){
+      const id = ++lastId;
+      const plane = document.createElement('img');
+      plane.className = 'plane';
+      plane.src = 'https://i.ibb.co/h2QzJZr/plane.png';
+      plane.style.left = '16px';
+      plane.style.bottom = '16px';
+      plane.style.transform = 'translate(0,0) rotate(0deg)';
+      game.appendChild(plane);
+
+      // Spawn হলে সাথেসাথে prediction
+      onPlaneSpawned(id);
+
+      // Animate (take-off)
+      requestAnimationFrame(()=>{
+        // translate(X,Y) -300 উচ্চতায়, 260px ডানে
+        plane.style.transition = 'transform 1.8s ease-out';
+        plane.style.transform = 'translate(260px, -220px) rotate(35deg)';
+      });
+
+      // remove after animation
+      setTimeout(()=> {
+        plane.remove();
+      }, 2000);
+    }
+
+    // --------------------
+    // Auto spawn controller
+    // --------------------
+    function startAuto(){
+      auto = true;
+      autoBtn.textContent = 'Auto Spawn: ON';
+      scheduleNext();
+      log('Auto spawn ON');
+    }
+    function stopAuto(){
+      auto = false;
+      autoBtn.textContent = 'Auto Spawn: OFF';
+      if(autoTimeout) clearTimeout(autoTimeout);
+      log('Auto spawn OFF');
+    }
+    function scheduleNext(){
+      if(!auto) return;
+      const wait = Math.floor(Math.random() * (AUTO_MAX_MS - AUTO_MIN_MS) + AUTO_MIN_MS);
+      autoTimeout = setTimeout(()=>{
+        spawnPlane();
+        scheduleNext();
+      }, wait);
+    }
+
+    // --------------------
+    // Events
+    // --------------------
+    spawnBtn.addEventListener('click', spawnPlane);
+    autoBtn.addEventListener('click', ()=>{
+      if(auto) stopAuto(); else startAuto();
+    });
+    clearLogBtn.addEventListener('click', ()=> logEl.innerHTML = '');
+
+    // init
+    showPrediction('—', '—');
+    log('Ready. Click "Spawn Plane" or enable "Auto Spawn".');
   </script>
 </body>
 </html>
