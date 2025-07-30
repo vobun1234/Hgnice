@@ -1,288 +1,143 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HGNICE Aviator – Event Based Predictor</title>
+  <title>Aviator Simulator</title>
   <style>
-    :root{
-      --bg:#0a0f1a;
-      --panel:#0f172a;
-      --accent:#00ffcc;
-      --accent2:#ffcc00;
-      --text:#e2e8f0;
-      --danger:#f87171;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
     }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0; padding:24px;
-      background: linear-gradient(135deg, #0a0f1a, #001f3f);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
-      min-height:100vh;
-      display:flex; flex-direction:column; align-items:center;
+    .header {
+      background: #222;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    h1{
-      color: var(--accent);
-      margin: 0 0 16px;
-      text-align:center;
-      text-shadow: 0 0 6px rgba(0,255,204,.4);
+    .balance {
+      color: #0f0;
+      font-weight: bold;
     }
-    .wrap{
-      width:100%;
-      max-width:720px;
+    .game-area {
+      height: 70vh;
+      background: radial-gradient(circle, #330033, #110011);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
-    .game-area{
-      position:relative;
-      width:100%;
-      height:360px;
-      background: radial-gradient(circle at bottom, #001f3f, #0a0f1a 70%);
-      border:2px solid rgba(0,255,204,.2);
-      border-radius:16px;
-      overflow:hidden;
-      box-shadow:0 0 20px rgba(0,255,204,.08);
+    #plane {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      font-size: 30px;
+      transform: rotate(-10deg);
     }
-    .plane{
-      position:absolute;
-      width:64px; height:64px;
-      bottom:16px; left:16px;
-      transform-origin:center;
-      will-change: transform;
-      filter: drop-shadow(0 0 6px rgba(255,255,255,.2));
+    .multiplier {
+      font-size: 48px;
+      font-weight: bold;
+      margin-top: 20px;
     }
-    .prediction-box{
-      margin:16px 0;
-      background: var(--panel);
-      border-radius:12px;
-      padding:16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.2);
-      text-align:center;
+    .controls {
+      background: #222;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
     }
-    .prediction{
-      font-size:2.6rem;
-      font-weight:700;
-      color: var(--accent);
-      text-shadow: 0 0 10px rgba(0,255,204,.2);
+    .controls button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
-    .log{
-      margin-top:8px;
-      max-height:140px;
-      overflow:auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:.9rem;
-      background:#0b1220;
-      border:1px solid #1e293b;
-      border-radius:8px;
-      padding:8px 10px;
-    }
-    .controls{
-      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
-      margin:12px 0 0;
-    }
-    button{
-      background: var(--accent);
-      color:#002018;
-      border:none;
-      border-radius:8px;
-      padding:10px 16px;
-      font-weight:600;
-      cursor:pointer;
-      transition:.15s;
-    }
-    button.secondary{
-      background:#1e293b; color:#e2e8f0;
-      border:1px solid #334155;
-    }
-    button.danger{
-      background: var(--danger); color:#fff;
-    }
-    button:disabled{
-      opacity:.6; cursor:not-allowed;
-    }
-    .tag{
-      display:inline-block;
-      padding:2px 8px;
-      border-radius:999px;
-      background:#1e293b;
-      color:#94a3b8;
-      font-size:.8rem;
-      margin-left:6px;
-    }
-    .stat-line{
-      margin-top:6px; font-size:.9rem; opacity:.8;
-    }
-    .hint{
-      font-size:.85rem; opacity:.6; text-align:center; margin-top:8px;
+    .history {
+      background: #111;
+      padding: 10px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>HGNICE Aviator – Event Based Predictor</h1>
+  <div class="header">
+    <div>Round: <span id="round">3545000</span></div>
+    <div class="balance">Balance: <span id="balance">100.00</span> ৳</div>
+  </div>
 
-    <div class="prediction-box">
-      <div>সর্বশেষ প্রেডিকশন</div>
-      <div id="prediction" class="prediction">—</div>
-      <div class="stat-line" id="lastReason">ইভেন্ট ট্রিগার: —</div>
-    </div>
+  <div class="game-area">
+    <div class="multiplier" id="multiplier">1.00x</div>
+    <div id="plane">🛩️</div>
+  </div>
 
-    <div class="game-area" id="game">
-      <!-- plane dynamically spawn হবে -->
-    </div>
+  <div class="controls">
+    <button onclick="startGame()">Start</button>
+    <button onclick="cashOut()">Cashout</button>
+  </div>
 
-    <div class="controls">
-      <button id="spawnBtn">Spawn Plane (ম্যানুয়াল)</button>
-      <button id="autoBtn" class="secondary">Auto Spawn: OFF</button>
-      <button id="clearLog" class="secondary">Clear Log</button>
-    </div>
-
-    <div class="hint">
-      “Auto Spawn” চালু না করলে টাইমার কাজ করবে না — <strong>শুধু প্লেন ফুটলেই</strong> প্রেডিকশন হবে।
-    </div>
-
-    <div class="log" id="log"></div>
+  <div class="history">
+    History: <span id="history"></span>
   </div>
 
   <script>
-    // --------------------
-    // CONFIG
-    // --------------------
-    const AUTO_MIN_MS = 2000;  // অটো মোডে র‍্যান্ডম মিন ইন্টারভাল
-    const AUTO_MAX_MS = 5000;  // অটো মোডে র‍্যান্ডম ম্যাক্স ইন্টারভাল
+    let multiplier = 1.0;
+    let interval;
+    let running = false;
+    let balance = 100.00;
+    let bet = 10.00;
+    let round = 3545000;
+    let cashedOut = false;
 
-    // --------------------
-    // STATE
-    // --------------------
-    const game = document.getElementById('game');
-    const logEl = document.getElementById('log');
-    const pEl = document.getElementById('prediction');
-    const reasonEl = document.getElementById('lastReason');
-    const spawnBtn = document.getElementById('spawnBtn');
-    const autoBtn = document.getElementById('autoBtn');
-    const clearLogBtn = document.getElementById('clearLog');
+    const multiplierEl = document.getElementById("multiplier");
+    const plane = document.getElementById("plane");
+    const balanceEl = document.getElementById("balance");
+    const roundEl = document.getElementById("round");
+    const historyEl = document.getElementById("history");
 
-    let auto = false;
-    let autoTimeout = null;
-    let lastId = 0;
+    function startGame() {
+      if (running) return;
+      running = true;
+      cashedOut = false;
+      multiplier = 1.0;
+      round++;
+      roundEl.textContent = round;
+      plane.style.left = "0%";
 
-    // --------------------
-    // CORE: weighted multiplier generator
-    // --------------------
-    function randomMultiplierWeighted() {
-      const r = Math.random();
-      let mult;
-      if (r < 0.70) {
-        // 70%: 1x – 3x
-        mult = (Math.random() * (3 - 1) + 1);
-      } else if (r < 0.90) {
-        // 20%: 3x – 10x
-        mult = (Math.random() * (10 - 3) + 3);
-      } else if (r < 0.98) {
-        // 8%: 10x – 50x
-        mult = (Math.random() * (50 - 10) + 10);
-      } else {
-        // 2%: 50x – 100x
-        mult = (Math.random() * (100 - 50) + 50);
+      interval = setInterval(() => {
+        multiplier += 0.01;
+        multiplierEl.textContent = multiplier.toFixed(2) + "x";
+        plane.style.left = Math.min(multiplier * 5, 100) + "%";
+        if (multiplier >= Math.random() * 10 + 1) {
+          stopGame(false);
+        }
+      }, 100);
+    }
+
+    function stopGame(success) {
+      clearInterval(interval);
+      running = false;
+      if (success && !cashedOut) {
+        balance += bet * multiplier;
+        historyEl.textContent += ` [✔️ ${multiplier.toFixed(2)}x]`;
+      } else if (!cashedOut) {
+        balance -= bet;
+        historyEl.textContent += ` [❌ ${multiplier.toFixed(2)}x]`;
       }
-      return mult.toFixed(2) + "x";
+      balanceEl.textContent = balance.toFixed(2);
     }
 
-    // --------------------
-    // EVENT: "plane spawned" => make prediction
-    // --------------------
-    function onPlaneSpawned(id) {
-      const mult = randomMultiplierWeighted();
-      showPrediction(mult, `Plane#${id} spawned`);
-      log(`Plane#${id} -> ${mult}`);
+    function cashOut() {
+      if (!running || cashedOut) return;
+      cashedOut = true;
+      stopGame(true);
     }
-
-    // --------------------
-    // PUBLIC API placeholder (যদি real API/Socket লাগে)
-    // --------------------
-    // সার্ভার থেকে multiplier এলে এই ফাংশন কল করবে
-    function triggerFromServer(multiplier){
-      showPrediction(multiplier, 'Server API');
-      log(`[SERVER] -> ${multiplier}`);
-    }
-
-    // --------------------
-    // UI helpers
-    // --------------------
-    function showPrediction(mult, reason){
-      pEl.textContent = mult;
-      reasonEl.textContent = `ইভেন্ট ট্রিগার: ${reason}`;
-    }
-
-    function log(msg){
-      const ts = new Date().toLocaleTimeString();
-      logEl.innerHTML = `[${ts}] ${msg}<br>` + logEl.innerHTML;
-    }
-
-    // --------------------
-    // Plane spawn + animate + remove
-    // --------------------
-    function spawnPlane(){
-      const id = ++lastId;
-      const plane = document.createElement('img');
-      plane.className = 'plane';
-      plane.src = 'https://i.ibb.co/h2QzJZr/plane.png';
-      plane.style.left = '16px';
-      plane.style.bottom = '16px';
-      plane.style.transform = 'translate(0,0) rotate(0deg)';
-      game.appendChild(plane);
-
-      // Spawn হলে সাথেসাথে prediction
-      onPlaneSpawned(id);
-
-      // Animate (take-off)
-      requestAnimationFrame(()=>{
-        // translate(X,Y) -300 উচ্চতায়, 260px ডানে
-        plane.style.transition = 'transform 1.8s ease-out';
-        plane.style.transform = 'translate(260px, -220px) rotate(35deg)';
-      });
-
-      // remove after animation
-      setTimeout(()=> {
-        plane.remove();
-      }, 2000);
-    }
-
-    // --------------------
-    // Auto spawn controller
-    // --------------------
-    function startAuto(){
-      auto = true;
-      autoBtn.textContent = 'Auto Spawn: ON';
-      scheduleNext();
-      log('Auto spawn ON');
-    }
-    function stopAuto(){
-      auto = false;
-      autoBtn.textContent = 'Auto Spawn: OFF';
-      if(autoTimeout) clearTimeout(autoTimeout);
-      log('Auto spawn OFF');
-    }
-    function scheduleNext(){
-      if(!auto) return;
-      const wait = Math.floor(Math.random() * (AUTO_MAX_MS - AUTO_MIN_MS) + AUTO_MIN_MS);
-      autoTimeout = setTimeout(()=>{
-        spawnPlane();
-        scheduleNext();
-      }, wait);
-    }
-
-    // --------------------
-    // Events
-    // --------------------
-    spawnBtn.addEventListener('click', spawnPlane);
-    autoBtn.addEventListener('click', ()=>{
-      if(auto) stopAuto(); else startAuto();
-    });
-    clearLogBtn.addEventListener('click', ()=> logEl.innerHTML = '');
-
-    // init
-    showPrediction('—', '—');
-    log('Ready. Click "Spawn Plane" or enable "Auto Spawn".');
   </script>
 </body>
 </html>
